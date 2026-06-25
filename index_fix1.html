@@ -1,0 +1,1939 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SaaS Storage VIP - Kho Lưu Trữ Dữ Liệu</title>
+    <!-- Google Fonts Inter & Space Grotesk -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- Nhúng thư viện Supabase chính thức -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Nhúng Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* CSS Variables */
+        :root {
+            --bg-main: #f8fafc;
+            --card-bg: rgba(255, 255, 255, 0.75);
+            --card-border: rgba(226, 232, 240, 0.8);
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --primary: #10b981;
+            --primary-hover: #059669;
+            --primary-light: #ecfdf5;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --danger-light: #fef2f2;
+            --info: #3b82f6;
+            --info-light: #eff6ff;
+            --warning: #f59e0b;
+            --warning-light: #fffbeb;
+            --radius-xl: 20px;
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --glow-color-1: rgba(16, 185, 129, 0.12);
+            --glow-color-2: rgba(59, 130, 246, 0.12);
+        }
+
+        [data-theme="dark"] {
+            --bg-main: #0b0f19;
+            --card-bg: rgba(17, 24, 39, 0.75);
+            --card-border: rgba(31, 41, 55, 0.8);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --primary: #10b981;
+            --primary-hover: #34d399;
+            --primary-light: rgba(16, 185, 129, 0.1);
+            --danger: #ef4444;
+            --danger-hover: #f87171;
+            --danger-light: rgba(239, 68, 68, 0.1);
+            --info: #3b82f6;
+            --info-light: rgba(59, 130, 246, 0.1);
+            --warning: #f59e0b;
+            --warning-light: rgba(245, 158, 11, 0.1);
+            --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+            --glow-color-1: rgba(16, 185, 129, 0.22);
+            --glow-color-2: rgba(59, 130, 246, 0.22);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 40px 20px;
+            overflow-x: hidden;
+            position: relative;
+            transition: background-color 0.4s ease;
+        }
+
+        /* Ambient Glow Background Circles */
+        .glow-bg {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            overflow: hidden;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .glow-circle {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.8;
+            transition: var(--transition);
+        }
+
+        .glow-circle-1 {
+            width: 400px;
+            height: 400px;
+            background-color: var(--glow-color-1);
+            top: -100px;
+            right: -50px;
+            animation: float1 15s infinite alternate ease-in-out;
+        }
+
+        .glow-circle-2 {
+            width: 450px;
+            height: 450px;
+            background-color: var(--glow-color-2);
+            bottom: -150px;
+            left: -100px;
+            animation: float2 20s infinite alternate ease-in-out;
+        }
+
+        @keyframes float1 {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(-50px, 80px) scale(1.1); }
+        }
+
+        @keyframes float2 {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(60px, -60px) scale(0.9); }
+        }
+
+        /* Main Container Card */
+        .container {
+            width: 100%;
+            max-width: 640px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 36px;
+            transition: var(--transition);
+            z-index: 10;
+        }
+
+        /* Header area */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-box {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, var(--primary), #059669);
+            border-radius: var(--radius-md);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+        }
+
+        .brand h2 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--text-primary), var(--text-secondary));
+            background-clip: text; /* standard property for compatibility */
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Theme Toggle Button */
+        .theme-toggle-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 1px solid var(--card-border);
+            background: var(--card-bg);
+            color: var(--text-primary);
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: var(--transition);
+        }
+
+        .theme-toggle-btn:hover {
+            transform: rotate(15deg) scale(1.05);
+            background: var(--primary-light);
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        /* Stats dashboard */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: var(--transition);
+        }
+
+        .stat-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-light);
+            color: var(--primary);
+            border-radius: var(--radius-sm);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .stat-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        /* Input Form styling */
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 140px;
+            padding: 18px;
+            padding-bottom: 36px;
+            font-size: 15px;
+            font-family: inherit;
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-md);
+            resize: none;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.12);
+            background: var(--card-bg);
+        }
+
+        .char-counter {
+            position: absolute;
+            bottom: 12px;
+            right: 18px;
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* Button Save */
+        .btn-submit {
+            background: linear-gradient(135deg, var(--primary), #059669);
+            color: white;
+            border: none;
+            padding: 15px 24px;
+            cursor: pointer;
+            border-radius: var(--radius-md);
+            width: 100%;
+            font-size: 16px;
+            font-weight: 600;
+            transition: var(--transition);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 18px rgba(16, 185, 129, 0.35);
+        }
+
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Spinner animation */
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Toolbar (Search & Filter) */
+        .toolbar {
+            margin-top: 36px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .search-wrapper {
+            position: relative;
+            flex-grow: 1;
+        }
+
+        .category-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 16px;
+            margin-bottom: 12px;
+        }
+
+        .category-tag {
+            border: 1px solid var(--card-border);
+            background: var(--card-bg);
+            color: var(--text-secondary);
+            padding: 10px 14px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .category-tag:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            transform: translateY(-1px);
+        }
+
+        .category-tag.active {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 16px 12px 42px;
+            font-size: 14px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--card-border);
+            background: rgba(255, 255, 255, 0.01);
+            color: var(--text-primary);
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .search-input:focus {
+            border-color: var(--primary);
+            background: var(--card-bg);
+        }
+
+        /* List Items container */
+        .danh-sach-container {
+            border-top: 1px solid var(--card-border);
+            padding-top: 24px;
+            height: 500px;
+            overflow-y: auto;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .items-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            height: auto;
+            overflow: visible;
+            padding-right: 4px;
+        }
+
+        /* Custom Scrollbar */
+        .items-list::-webkit-scrollbar {
+            width: 5px;
+        }
+        .items-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .items-list::-webkit-scrollbar-thumb {
+            background: var(--card-border);
+            border-radius: 10px;
+        }
+
+        /* Item card */
+        .item-card,
+        .data-card {
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            height: auto;
+            min-height: 100px;
+            transition: var(--transition);
+            animation: slideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            max-width: 100%;
+            word-wrap: break-word;
+        }
+
+        .item-card::before,
+        .data-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(to bottom, var(--primary), #059669);
+            border-radius: 4px 0 0 4px;
+            opacity: 0.8;
+        }
+
+        .item-card:hover {
+            transform: translateX(4px);
+            border-color: rgba(16, 185, 129, 0.3);
+            background: var(--card-bg);
+            box-shadow: var(--shadow-md);
+        }
+
+        .item-card-body {
+            font-size: 15px;
+            color: var(--text-primary);
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+            padding-right: 70px; /* Space for action buttons */
+        }
+
+        .item-card img,
+        .item-card video,
+        .item-card iframe,
+        .item-card embed,
+        .item-card .attachment,
+        .data-card img,
+        .data-card video,
+        .data-card iframe,
+        .data-card embed,
+        .data-card .attachment {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .item-card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 10px;
+        }
+
+        .item-time {
+            font-size: 11px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Action buttons on card */
+        .card-actions {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            display: flex;
+            gap: 8px;
+            opacity: 0.4;
+            transition: var(--transition);
+        }
+
+        .item-card:hover .card-actions {
+            opacity: 1;
+        }
+
+        .btn-action {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--card-border);
+            background: var(--card-bg);
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: var(--transition);
+        }
+
+        .btn-action:hover {
+            transform: scale(1.08);
+        }
+
+        .btn-action.copy:hover {
+            color: var(--primary);
+            background-color: var(--primary-light);
+            border-color: var(--primary);
+        }
+
+        .btn-action.delete:hover {
+            color: var(--danger);
+            background-color: var(--danger-light);
+            border-color: var(--danger);
+        }
+
+        /* Toast Container */
+        .toast-container {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        .toast {
+            min-width: 280px;
+            max-width: 380px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-md);
+            padding: 14px 18px;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-weight: 500;
+            pointer-events: auto;
+            backdrop-filter: blur(12px);
+            animation: toastSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1), toastFadeOut 0.3s ease 2.7s forwards;
+        }
+
+        .toast-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .toast.success {
+            border-left: 4px solid var(--primary);
+        }
+        .toast.success .toast-icon { color: var(--primary); }
+
+        .toast.error {
+            border-left: 4px solid var(--danger);
+        }
+        .toast.error .toast-icon { color: var(--danger); }
+
+        .toast.info {
+            border-left: 4px solid var(--info);
+        }
+        .toast.info .toast-icon { color: var(--info); }
+
+        .toast.warning {
+            border-left: 4px solid var(--warning);
+        }
+        .toast.warning .toast-icon { color: var(--warning); }
+
+        /* Card exit animation */
+        .item-card.removing {
+            animation: slideOut 0.3s ease forwards;
+        }
+
+        /* Empty state */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 50px 20px;
+            color: var(--text-muted);
+            text-align: center;
+            gap: 12px;
+        }
+
+        .empty-icon {
+            color: var(--card-border);
+            margin-bottom: 8px;
+        }
+
+        /* Keyframes Animations */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(12px) scale(0.98);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                opacity: 1;
+                transform: translateX(0) scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(100%) scale(0.95);
+                height: 0;
+                padding: 0;
+                margin: 0;
+                border: 0;
+            }
+        }
+
+        @keyframes toastSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes toastFadeOut {
+            to {
+                opacity: 0;
+                transform: translateY(-10px) scale(0.95);
+            }
+        }
+        .dashboard{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+    gap:15px;
+}
+
+.card{
+    background:white;
+    padding:20px;
+    border-radius:15px;
+    box-shadow:0 2px 10px rgba(0,0,0,.1);
+    text-align:center;
+}
+
+.card h3{
+    color:#666;
+    font-size:14px;
+    margin-bottom:10px;
+}
+
+.card p{
+    font-size:24px;
+    font-weight:bold;
+    color:#10b981;
+}
+.auth-box{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    margin-bottom:20px;
+}
+
+/* New Premium CSS Additions */
+.auth-section {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-md);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    transition: var(--transition);
+}
+
+.auth-tabs {
+    display: flex;
+    border-bottom: 2px solid var(--card-border);
+    margin-bottom: 12px;
+}
+
+.auth-tab {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 16px;
+    font-weight: 600;
+    padding: 12px;
+    cursor: pointer;
+    transition: var(--transition);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+}
+
+.auth-tab:hover {
+    color: var(--primary);
+}
+
+.auth-tab.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+}
+
+.input-field-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.input-field-wrapper .field-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none;
+    transition: var(--transition);
+}
+
+.form-input {
+    width: 100%;
+    padding: 14px 16px 14px 44px;
+    font-size: 15px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--card-border);
+    background: rgba(255, 255, 255, 0.01);
+    color: var(--text-primary);
+    outline: none;
+    transition: var(--transition);
+}
+
+.form-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.12);
+    background: var(--card-bg);
+}
+
+.form-input:focus + .field-icon {
+    color: var(--primary);
+}
+
+.form-select {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 14px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--card-border);
+    background: var(--card-bg);
+    color: var(--text-primary);
+    outline: none;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.form-select:focus {
+    border-color: var(--primary);
+}
+
+.custom-file-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.custom-file-label {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: var(--radius-md);
+    border: 1px dashed var(--card-border);
+    background: rgba(255, 255, 255, 0.01);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: var(--transition);
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.custom-file-label:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--primary-light);
+}
+
+/* Adjustments for dark theme dashboard card content */
+[data-theme="dark"] .card {
+    background: rgba(31, 41, 55, 0.6);
+    border: 1px solid var(--card-border);
+}
+
+[data-theme="dark"] .card h3 {
+    color: var(--text-secondary);
+}
+    </style>
+</head>
+<body>
+
+    <!-- Ambient Glow Background -->
+    <div class="glow-bg">
+        <div class="glow-circle glow-circle-1"></div>
+        <div class="glow-circle glow-circle-2"></div>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="brand">
+                <div class="logo-box">
+                    <i data-lucide="database" size="24"></i>
+                </div>
+                <h2>SaaS Storage VIP</h2>
+            </div>
+            <div class="header-actions" style="display: flex; align-items: center; gap: 12px;">
+                <span id="welcome" style="font-size: 14px; font-weight: 600; color: var(--text-secondary);"></span>
+                <button class="theme-toggle-btn" onclick="toggleTheme()" id="themeToggle" title="Chuyển đổi giao diện">
+                    <span id="themeIcon"><i data-lucide="moon"></i></span>
+                </button>
+                <button id="btnLogoutHeader" class="theme-toggle-btn" onclick="dangXuat()" title="Đăng xuất" style="display: none;">
+                    <i data-lucide="log-out"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Auth Section (Sleek Glassmorphic Form) -->
+        <div id="authSection" class="auth-section">
+            <div class="auth-tabs">
+                <button id="tabLogin" class="auth-tab active" onclick="switchAuthMode('login')">Đăng nhập</button>
+                <button id="tabRegister" class="auth-tab" onclick="switchAuthMode('register')">Đăng ký</button>
+            </div>
+            
+            <div class="input-field-wrapper">
+                <i data-lucide="mail" class="field-icon"></i>
+                <input id="email" class="form-input" placeholder="Email của bạn">
+            </div>
+            
+            <div class="input-field-wrapper">
+                <i data-lucide="lock" class="field-icon"></i>
+                <input id="password" class="form-input" type="password" placeholder="Mật khẩu">
+            </div>
+            
+            <button id="btnAuthAction" onclick="handleAuthSubmit()" class="btn-submit" style="margin-top: 10px;">
+                Đăng nhập
+            </button>
+        </div>
+
+        <!-- Main Dashboard Section (Hidden by default) -->
+        <div id="dashboardSection" style="display: none;">
+            <!-- Dashboard Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i data-lucide="file-text" size="20"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-label">Tổng ghi chú</span>
+                        <span class="stat-value" id="statTotalNotes">0</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i data-lucide="file" size="20"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-label">Tổng tệp</span>
+                        <span class="stat-value" id="statTotalFiles">0</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i data-lucide="hard-drive" size="20"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-label">Đã dùng</span>
+                        <span class="stat-value" id="statUsedStorage">0 Bytes</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i data-lucide="pie-chart" size="20"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-label">Còn lại</span>
+                        <span class="stat-value" id="statRemainingStorage">100 MB</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Section -->
+            <div class="input-group">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                    <select id="txtCategory" class="form-select">
+                        <option value="">Chọn danh mục (tùy chọn)</option>
+                        <option value="công việc">💼 Công việc</option>
+                        <option value="học tập">🎓 Học tập</option>
+                        <option value="sáng tạo">🎨 Sáng tạo</option>
+                        <option value="khác">⚙️ Khác</option>
+                    </select>
+                    
+                    <div class="custom-file-wrapper">
+                        <label for="fileInput" class="custom-file-label">
+                            <i data-lucide="upload-cloud" size="16"></i> 
+                            <span id="fileNameLabel">Chọn tệp đính kèm</span>
+                        </label>
+                        <input type="file" id="fileInput" onchange="handleFileSelect()" style="display: none;">
+                        <button id="btnRemoveFile" onclick="clearFileSelection(event)" style="display: none; background: none; border: none; color: var(--danger); cursor: pointer; flex-shrink: 0;" title="Xóa file đã chọn">
+                            <i data-lucide="x-circle" size="18"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <textarea id="txtNoiDung" placeholder="Nhập nội dung cần lưu trữ vào đám mây bảo mật..."></textarea>
+                <div class="char-counter" id="charCount">0 ký tự</div>
+            </div>
+            
+            <button class="btn-submit" onclick="luuDuLieu()" id="submitBtn">
+                <i data-lucide="sparkles"></i> Bấm để lưu dữ liệu
+            </button>
+
+            <!-- Toolbar -->
+            <div class="toolbar">
+                <div class="search-wrapper">
+                    <div class="search-icon">
+                        <i data-lucide="search" size="18"></i>
+                    </div>
+                    <input type="text" id="searchInput" class="search-input" placeholder="Tìm kiếm nhanh ghi chú...">
+                </div>
+            </div>
+
+            <div class="category-tabs" id="categoryTabs">
+                <button class="category-tag active" onclick="selectCategoryTab('all')">Tất cả</button>
+                <button class="category-tag" onclick="selectCategoryTab('công việc')">Công việc</button>
+                <button class="category-tag" onclick="selectCategoryTab('học tập')">Học tập</button>
+                <button class="category-tag" onclick="selectCategoryTab('sáng tạo')">Sáng tạo</button>
+                <button class="category-tag" onclick="selectCategoryTab('khác')">Khác</button>
+            </div>
+
+            <!-- List Section -->
+            <div class="danh-sach-container">
+               <div id="adminDashboard" style="display:none; margin-bottom:20px;">
+                    <div class="dashboard">
+                        <div class="card">
+                            <h3>Tổng User</h3>
+                            <p id="tongUser">0</p>
+                        </div>
+                        <div class="card">
+                            <h3>Tổng File</h3>
+                            <p id="tongFile">0</p>
+                        </div>
+                        <div class="card">
+                            <h3>Tổng Notes</h3>
+                            <p id="tongNote">0</p>
+                        </div>
+                        <div class="card">
+                            <h3>User dùng nhiều nhất</h3>
+                            <p id="topUser">-</p>
+                        </div>
+                    </div>
+               </div>
+               
+               <div class="section-title">
+                    <i data-lucide="list"></i>
+                    <span>Danh sách dữ liệu trong kho:</span>
+               </div>
+               <div id="danhSachItems" class="items-list">
+                    <div class="empty-state">Đang tải dữ liệu...</div>
+               </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="adminPanel" class="container" style="margin-top:20px; display:none;"></div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script>
+        // CẤU HÌNH SUPABASE CỦA BẠN
+        const SUPABASE_URL = "https://qulbawnlmoxdoigsoghz.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF1bGJhd25sbW94ZG9pZ3NvZ2h6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzNzM3MDcsImV4cCI6MjA5NTk0OTcwN30.m1OkKrKYeZdZ_vjHghYjJhiP-9CDnMzv9LEVJVTT9nI";
+
+        // Khởi tạo kết nối đúng chuẩn (Dùng thư viện của Supabase)
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        let currentUser = null;
+
+        // Lưu trữ cache dữ liệu để thực hiện tìm kiếm trực tiếp
+        let cachedItems = [];
+        let selectedCategoryTag = "all";
+
+        let authMode = "login";
+
+        function switchAuthMode(mode) {
+            authMode = mode;
+            const tabLogin = document.getElementById("tabLogin");
+            const tabRegister = document.getElementById("tabRegister");
+            const btnAuthAction = document.getElementById("btnAuthAction");
+            
+            if (mode === "login") {
+                tabLogin.classList.add("active");
+                tabRegister.classList.remove("active");
+                btnAuthAction.innerText = "Đăng nhập";
+            } else {
+                tabRegister.classList.add("active");
+                tabLogin.classList.remove("active");
+                btnAuthAction.innerText = "Đăng ký";
+            }
+        }
+
+        async function handleAuthSubmit() {
+            if (authMode === "login") {
+                await dangNhap();
+            } else {
+                await dangKy();
+            }
+        }
+
+        function handleFileSelect() {
+            const fileInput = document.getElementById("fileInput");
+            const fileNameLabel = document.getElementById("fileNameLabel");
+            const btnRemoveFile = document.getElementById("btnRemoveFile");
+            
+            if (fileInput.files && fileInput.files.length > 0) {
+                fileNameLabel.innerText = fileInput.files[0].name;
+                btnRemoveFile.style.display = "inline-block";
+            } else {
+                fileNameLabel.innerText = "Chọn tệp đính kèm";
+                btnRemoveFile.style.display = "none";
+            }
+        }
+
+        function clearFileSelection(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            const fileInput = document.getElementById("fileInput");
+            const fileNameLabel = document.getElementById("fileNameLabel");
+            const btnRemoveFile = document.getElementById("btnRemoveFile");
+            
+            fileInput.value = "";
+            fileNameLabel.innerText = "Chọn tệp đính kèm";
+            btnRemoveFile.style.display = "none";
+        }
+
+        // Chạy khi bắt đầu ứng dụng
+        window.onload = function() {
+            initTheme();
+            setupEventListeners();
+
+            const savedUser = localStorage.getItem("currentUser");
+
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                const welcome = document.getElementById("welcome");
+                if (welcome) {
+                    welcome.innerHTML = `Xin chào <strong>${currentUser.username}</strong> (${currentUser.role})`;
+                }
+
+                // Show dashboard and logout button
+                document.getElementById("authSection").style.display = "none";
+                document.getElementById("dashboardSection").style.display = "block";
+                document.getElementById("btnLogoutHeader").style.display = "inline-flex";
+
+                layDuLieu();
+
+                if (currentUser.role === "admin") {
+                    layToanBoDuLieu();
+                } else {
+                    const adminDashboard = document.getElementById("adminDashboard");
+                    const adminPanel = document.getElementById("adminPanel");
+                    if (adminDashboard) adminDashboard.style.display = "none";
+                    if (adminPanel) adminPanel.style.display = "none";
+                }
+            } else {
+                // Show login form
+                document.getElementById("authSection").style.display = "flex";
+                document.getElementById("dashboardSection").style.display = "none";
+                document.getElementById("btnLogoutHeader").style.display = "none";
+            }
+        };
+
+        // Thiết lập bộ bắt sự kiện
+        function setupEventListeners() {
+            const textarea = document.getElementById("txtNoiDung");
+            const searchInput = document.getElementById("searchInput");
+
+            textarea.addEventListener("input", function() {
+                const count = textarea.value.length;
+                document.getElementById("charCount").innerText = `${count} ký tự`;
+            });
+
+            searchInput.addEventListener("input", function() {
+                filterDuLieu(searchInput.value);
+            });
+
+            // Gắn sự kiện Enter cho các trường nhập liệu Authentication
+            const emailInput = document.getElementById("email");
+            const passwordInput = document.getElementById("password");
+            
+            const handleEnter = function(e) {
+                if (e.key === "Enter") {
+                    handleAuthSubmit();
+                }
+            };
+            
+            if (emailInput) emailInput.addEventListener("keydown", handleEnter);
+            if (passwordInput) passwordInput.addEventListener("keydown", handleEnter);
+        }
+
+        // Chống tấn công XSS
+        function escapeHtml(unsafe) {
+            return unsafe
+                 .replace(/&/g, "&amp;")
+                 .replace(/</g, "&lt;")
+                 .replace(/>/g, "&gt;")
+                 .replace(/"/g, "&quot;")
+                 .replace(/'/g, "&#039;");
+        }
+
+        // --- HỆ THỐNG GIAO DIỆN (THEME) ---
+        function initTheme() {
+            const savedTheme = localStorage.getItem("theme") || "light";
+            document.documentElement.setAttribute("data-theme", savedTheme);
+            updateThemeIcon(savedTheme);
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute("data-theme");
+            const newTheme = currentTheme === "dark" ? "light" : "dark";
+            document.documentElement.setAttribute("data-theme", newTheme);
+            localStorage.setItem("theme", newTheme);
+            updateThemeIcon(newTheme);
+            showToast(`Đã chuyển sang giao diện ${newTheme === "dark" ? "Tối" : "Sáng"}`, "info");
+        }
+
+        function updateThemeIcon(theme) {
+            const iconContainer = document.getElementById("themeIcon");
+            if (theme === "dark") {
+                iconContainer.innerHTML = `<i data-lucide="sun"></i>`;
+            } else {
+                iconContainer.innerHTML = `<i data-lucide="moon"></i>`;
+            }
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+        }
+
+        // --- HỆ THỐNG THÔNG BÁO (TOAST) ---
+        function showToast(message, type = "success") {
+            const container = document.getElementById("toast-container");
+            const toast = document.createElement("div");
+            toast.className = `toast ${type}`;
+            
+            let iconName = "check-circle";
+            if (type === "error") iconName = "alert-circle";
+            else if (type === "info") iconName = "info";
+            else if (type === "warning") iconName = "alert-triangle";
+
+            toast.innerHTML = `
+                <div class="toast-icon"><i data-lucide="${iconName}"></i></div>
+                <div>${message}</div>
+            `;
+            
+            container.appendChild(toast);
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+
+            // Tự động gỡ khỏi DOM sau khi kết thúc hiệu ứng (3s)
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        // Helper formatting bytes
+        function formatBytes(bytes, decimals = 2) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+
+        // --- THỐNG KÊ (STATS) ---
+        function updateStats(items) {
+            document.getElementById("statTotalNotes").innerText = items.length;
+            
+            const totalFiles = items.filter(item => item.file_url).length;
+            document.getElementById("statTotalFiles").innerText = totalFiles;
+            
+            let usedBytes = 0;
+            items.forEach(item => {
+                usedBytes += Number(item.file_size || 0);
+            });
+            document.getElementById("statUsedStorage").innerText = formatBytes(usedBytes);
+            
+            const TOTAL_QUOTA = 100 * 1024 * 1024; // 100 MB quota
+            const remainingBytes = Math.max(0, TOTAL_QUOTA - usedBytes);
+            document.getElementById("statRemainingStorage").innerText = formatBytes(remainingBytes);
+        }
+
+        // --- XỬ LÝ DỮ LIỆU ---
+        async function setupSession(username, authId) {
+            // Tìm user trong database
+            const { data, error } = await supabaseClient
+                .from("app_users")
+                .select("*")
+                .eq("username", username);
+
+            console.log("DATA:", data);
+            console.log("ERROR:", error);
+
+            if (error) {
+                showToast("Lỗi cơ sở dữ liệu: " + error.message, "error");
+                return;
+            }
+
+            let user = data?.[0];
+
+            // Nếu chưa tồn tại thì tạo mới
+            if (!user) {
+                const { data: newUser, error: insertError } = await supabaseClient
+                    .from("app_users")
+                    .insert([
+                        {
+                            username: username,
+                            role: "user",
+                            auth_id: authId || null
+                        }
+                    ])
+                    .select();
+
+                if (insertError) {
+                    showToast("Lỗi tạo hồ sơ user: " + insertError.message, "error");
+                    return;
+                }
+
+                user = newUser[0];
+            } else if (!user.auth_id && authId) {
+                // Cập nhật auth_id nếu chưa được liên kết
+                await supabaseClient
+                    .from("app_users")
+                    .update({ auth_id: authId })
+                    .eq("id", user.id);
+                user.auth_id = authId;
+            }
+
+            currentUser = user;
+
+            localStorage.setItem(
+                "currentUser",
+                JSON.stringify(user)
+            );
+
+            // Cập nhật thẻ welcome
+            const welcome = document.getElementById("welcome");
+            if (welcome) {
+                welcome.innerHTML = `Xin chào <strong>${user.username}</strong> (${user.role})`;
+            }
+
+            // Show dashboard and logout button
+            document.getElementById("authSection").style.display = "none";
+            document.getElementById("dashboardSection").style.display = "block";
+            document.getElementById("btnLogoutHeader").style.display = "inline-flex";
+
+            // Load dữ liệu của user
+            await layDuLieu();
+
+            // Nếu là admin
+            if (user.role === "admin") {
+                await layToanBoDuLieu();
+            } else {
+                const adminDashboard = document.getElementById("adminDashboard");
+                const adminPanel = document.getElementById("adminPanel");
+                if (adminDashboard) adminDashboard.style.display = "none";
+                if (adminPanel) adminPanel.style.display = "none";
+            }
+
+            showToast(`Đăng nhập thành công: ${user.username}`, "success");
+        }
+        // 1. Lưu dữ liệu
+        async function luuDuLieu() {
+            if (!currentUser) {
+                showToast("Hãy đăng nhập trước khi thực hiện lưu dữ liệu!", "warning");
+                return;
+            }
+
+            const noiDungInput = document.getElementById("txtNoiDung").value.trim();
+            const categorySelect = document.getElementById("txtCategory").value;
+            const fileInput = document.getElementById("fileInput");
+            const file = fileInput.files[0];
+
+            if (!noiDungInput && !file) {
+                showToast("Vui lòng nhập nội dung hoặc chọn file để lưu!", "warning");
+                return;
+            }
+
+                const submitBtn = document.getElementById("submitBtn");
+            const originalBtnHtml = submitBtn.innerHTML;
+            
+            // Set loading state
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<i data-lucide="loader" class="animate-spin"></i> Đang xử lý...`;
+            if (window.lucide) lucide.createIcons();
+
+            const BUCKET_NAME = 'user-files';
+            let fileUrl = null;
+            let fileName = null;
+            let fileType = null;
+            let fileSize = null;
+
+            try {
+                if (file) {
+                    // Upload file to Supabase Storage
+                    const cleanFileName = file.name.replace(/[^\x00-\x7F]/g, ""); // strip non-ascii
+                    const filePath = `${currentUser.id}/${Date.now()}_${cleanFileName}`;
+                    
+                    const { data: uploadData, error: uploadError } = await supabaseClient.storage
+                        .from(BUCKET_NAME)
+                        .upload(filePath, file, {
+                            cacheControl: '3600',
+                            upsert: false
+                        });
+
+                    if (uploadError) {
+                        if (uploadError.message && uploadError.message.toLowerCase().includes('bucket not found')) {
+                            throw new Error("Không thể tải file lên đám mây: Bucket không tồn tại. Vui lòng tạo bucket 'user-files' trong Supabase Storage và cấp quyền truy cập phù hợp.");
+                        }
+                        throw new Error("Không thể tải file lên đám mây: " + uploadError.message);
+                    }
+
+                    // 3. Get Public URL
+                    const { data: publicUrlData } = supabaseClient.storage
+                        .from(BUCKET_NAME)
+                        .getPublicUrl(filePath);
+                    
+                    fileUrl = publicUrlData.publicUrl;
+                    fileName = file.name;
+                    fileType = file.type;
+                    fileSize = file.size;
+                }
+
+                // 4. Save metadata to kho_luu_tru table
+                const { error: insertError } = await supabaseClient
+                    .from("kho_luu_tru")
+                    .insert([
+                        {
+                            user_id: currentUser.id,
+                            user_name: currentUser.username,
+                            noi_dung: noiDungInput || `Đính kèm file: ${fileName}`,
+                            category: categorySelect || null,
+                            file_url: fileUrl,
+                            file_name: fileName,
+                            file_type: fileType,
+                            file_size: fileSize
+                        }
+                    ]);
+
+                if (insertError) {
+                    throw new Error("Lỗi lưu thông tin: " + insertError.message);
+                }
+
+                showToast("Đã lưu dữ liệu lên đám mây thành công!", "success");
+                
+                // Clear input
+                document.getElementById("txtNoiDung").value = "";
+                document.getElementById("txtCategory").value = "";
+                fileInput.value = "";
+                document.getElementById("charCount").innerText = "0 ký tự";
+
+                // Refresh lists
+                await layDuLieu();
+                if (currentUser.role === "admin") {
+                    await layToanBoDuLieu();
+                }
+
+            } catch (err) {
+                showToast(err.message, "error");
+            } finally {
+                // Restore button
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnHtml;
+                if (window.lucide) lucide.createIcons();
+            }
+        }
+        // 2. Lấy dữ liệu
+        async function layDuLieu(categoryFilter = "all") {
+
+    if (!currentUser)
+        return;
+
+    selectedCategoryTag = categoryFilter || "all";
+    updateCategoryTabsUI();
+
+    const listDiv = document.getElementById("danhSachItems");
+
+    let query = supabaseClient
+        .from("kho_luu_tru")
+        .select("*")
+        .eq("user_id", currentUser.id);
+
+    if (categoryFilter && categoryFilter !== "all") {
+        query = query.eq("category", categoryFilter);
+    }
+
+    const { data, error } = await query.order("created_at", {
+        ascending: false
+    });
+
+    if (error) {
+        listDiv.innerHTML = error.message;
+        return;
+    }
+
+    cachedItems = data || [];
+    updateStats(cachedItems);
+
+    const searchValue = document.getElementById("searchInput").value.trim();
+    if (searchValue) {
+        filterDuLieu(searchValue);
+    } else {
+        renderList(cachedItems);
+    }
+}
+//ham admin 
+async function layToanBoDuLieu() {
+    const adminDashboard = document.getElementById("adminDashboard");
+    const adminPanel = document.getElementById("adminPanel");
+
+    if (adminDashboard) adminDashboard.style.display = "block";
+    if (adminPanel) adminPanel.style.display = "block";
+
+    // 1. Fetch all users
+    const { data: users, error: errUsers } = await supabaseClient
+        .from("app_users")
+        .select("*");
+    
+    // 2. Fetch all files & notes
+    const { data: allItems, error: errItems } = await supabaseClient
+        .from("kho_luu_tru")
+        .select("*");
+
+    if (errUsers || errItems) {
+        if (adminPanel) adminPanel.innerHTML = "<p>Lỗi khi tải dữ liệu quản trị viên</p>";
+        return;
+    }
+
+    // Populate admin dashboard cards
+    document.getElementById("tongUser").innerText = users.length;
+    
+    const totalFiles = allItems.filter(item => item.file_url).length;
+    document.getElementById("tongFile").innerText = totalFiles;
+    
+    document.getElementById("tongNote").innerText = allItems.length;
+
+    // Find top user by total storage or note count
+    let userStats = {}; // { username: { notes: 0, size: 0 } }
+    users.forEach(u => {
+        userStats[u.username] = { notes: 0, size: 0 };
+    });
+    allItems.forEach(item => {
+        const u = item.user_name || "Unknown";
+        if (!userStats[u]) {
+            userStats[u] = { notes: 0, size: 0 };
+        }
+        userStats[u].notes++;
+        userStats[u].size += Number(item.file_size || 0);
+    });
+
+    let topUser = "-";
+    let maxResource = -1;
+    for (let u in userStats) {
+        let resource = userStats[u].size > 0 ? userStats[u].size : userStats[u].notes;
+        if (resource > maxResource) {
+            maxResource = resource;
+            topUser = u;
+        }
+    }
+    if (topUser !== "-") {
+        const stats = userStats[topUser];
+        if (stats.size > 0) {
+            document.getElementById("topUser").innerText = `${topUser} (${formatBytes(stats.size)})`;
+        } else {
+            document.getElementById("topUser").innerText = `${topUser} (${stats.notes} ghi chú)`;
+        }
+    } else {
+        document.getElementById("topUser").innerText = "-";
+    }
+
+    // Group items by user for the list view
+    let grouped = {};
+    allItems.forEach(item => {
+        const u = item.user_name || "Khác";
+        if (!grouped[u]) {
+            grouped[u] = [];
+        }
+        grouped[u].push(item);
+    });
+
+    let html = "<h3 class='section-title'><i data-lucide='shield-alert'></i> Dữ liệu toàn hệ thống (Admin)</h3>";
+    for (let u in grouped) {
+        html += `
+            <div style="margin-top: 15px; border-bottom: 1px solid var(--card-border); padding-bottom: 10px;">
+                <h4 style="color: var(--primary); font-weight: 600; margin-bottom: 8px;">User: ${u}</h4>
+        `;
+        grouped[u].forEach(note => {
+            const hasFile = note.file_url ? ` | File: <a href="${note.file_url}" target="_blank" style="color: var(--info);">${note.file_name} (${formatBytes(note.file_size)})</a>` : "";
+            const cat = note.category ? ` [${note.category.toUpperCase()}]` : "";
+            html += `
+                <p style="font-size: 14px; margin-left: 15px; margin-bottom: 5px;">
+                    • ${escapeHtml(note.noi_dung)}${cat}${hasFile}
+                </p>
+            `;
+        });
+        html += `</div>`;
+    }
+
+    adminPanel.innerHTML = html;
+    if (window.lucide) {
+        lucide.createIcons();
+    }
+}
+
+        // 3. Render danh sách ra HTML
+        function renderList(items) {
+            const listDiv = document.getElementById("danhSachItems");
+            
+            if (items.length === 0) {
+                listDiv.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon"><i data-lucide="database" size="48"></i></div>
+                        <p>Kho lưu trữ hiện tại đang trống.</p>
+                        <span style="font-size:12px; color:var(--text-muted)">Hãy nhập dữ liệu ở trên để lưu trữ.</span>
+                    </div>
+                `;
+                if (window.lucide) {
+                    lucide.createIcons();
+                }
+                return;
+            }
+
+            listDiv.innerHTML = "";
+            items.forEach(item => {
+                const date = new Date(item.created_at).toLocaleString('vi-VN');
+                
+                // Category badge
+                const categoryBadge = item.category 
+                    ? `<span style="display:inline-block; font-size:10px; font-weight:600; padding:2px 8px; border-radius:4px; background:var(--primary-light); color:var(--primary); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;">${escapeHtml(item.category)}</span>`
+                    : '';
+                
+                // File link
+                let fileAttachment = '';
+                if (item.file_url) {
+                    const safeUrl = item.file_url.replace(/'/g, "\\'");
+                    const safeName = (item.file_name || '').replace(/'/g, "\\'");
+                    fileAttachment = `
+                        <div style="margin-top:12px; display:flex; align-items:center; gap:10px; padding:10px; border-radius:var(--radius-sm); background:rgba(255,255,255,0.03); border:1px dashed var(--card-border); max-width: 100%;">
+                            <div style="color:var(--info); flex-shrink:0;"><i data-lucide="file" size="20"></i></div>
+                            <div style="flex-grow:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px;">
+                                <a href="${item.file_url}" target="_blank" style="color:var(--text-primary); text-decoration:none; font-weight:500; display:block; overflow:hidden; text-overflow:ellipsis;" title="${escapeHtml(item.file_name)}">
+                                    ${escapeHtml(item.file_name)}
+                                </a>
+                                <span style="font-size:10px; color:var(--text-muted); display:block;">${formatBytes(item.file_size)}</span>
+                            </div>
+                            <button type="button" onclick="downloadFile('${safeUrl}', '${safeName}')" class="btn-action" style="flex-shrink:0;" title="Tải xuống">
+                                <i data-lucide="download" size="14"></i>
+                            </button>
+                        </div>
+                    `;
+                }
+
+                listDiv.innerHTML += `
+                    <div class="item-card" id="card-${item.id}">
+                        <div class="card-actions">
+                            <button class="btn-action copy" onclick="saoChep(${item.id}, this)" title="Sao chép">
+                                <i data-lucide="copy" size="16"></i>
+                            </button>
+                            <button class="btn-action delete" onclick="xoaDuLieu(${item.id})" title="Xóa dữ liệu">
+                                <i data-lucide="trash-2" size="16"></i>
+                            </button>
+                        </div>
+                        <div class="item-card-body">
+                            ${categoryBadge}
+                            <div>${escapeHtml(item.noi_dung)}</div>
+                            ${fileAttachment}
+                        </div>
+                        <div class="item-card-footer">
+                            <div class="item-time">
+                                <i data-lucide="clock" size="12"></i>
+                                <span>Lưu lúc: ${date}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+        }
+
+        // 4. Lọc dữ liệu trực tiếp
+        function filterDuLieu(keyword) {
+            const lowered = keyword.trim().toLowerCase();
+            const filtered = cachedItems.filter(item => {
+                const content = (item.noi_dung || "").toLowerCase();
+                const category = (item.category || "").toLowerCase();
+                return content.includes(lowered) || category.includes(lowered);
+            });
+            renderList(filtered);
+        }
+
+        function selectCategoryTab(category) {
+            const searchValue = document.getElementById("searchInput").value.trim();
+            layDuLieu(category).then(() => {
+                if (searchValue) {
+                    filterDuLieu(searchValue);
+                }
+            });
+        }
+
+        function updateCategoryTabsUI() {
+            const buttons = document.querySelectorAll('.category-tag');
+            buttons.forEach(button => {
+                const value = button.textContent.trim().toLowerCase();
+                const normalized = value === 'tất cả' ? 'all' : value;
+                if (normalized === selectedCategoryTag) {
+                    button.classList.add('active');
+                } else {
+                    button.classList.remove('active');
+                }
+            });
+        }
+
+        async function downloadFile(fileUrl, fileName) {
+            if (!fileUrl) {
+                showToast("Không có đường dẫn tải xuống.", "error");
+                return;
+            }
+
+            const bucketPath = getStoragePathFromPublicUrl(fileUrl);
+            if (bucketPath) {
+                try {
+                    const { data, error } = await supabaseClient.storage
+                        .from('user-files')
+                        .createSignedUrl(bucketPath, 60);
+                    if (!error && data && data.signedUrl) {
+                        const a = document.createElement('a');
+                        a.href = data.signedUrl;
+                        a.download = fileName || '';
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                        return;
+                    }
+                } catch (err) {
+                    console.log('createSignedUrl error:', err);
+                }
+            }
+
+            const fallback = document.createElement('a');
+            fallback.href = fileUrl;
+            fallback.target = '_blank';
+            fallback.download = fileName || '';
+            document.body.appendChild(fallback);
+            fallback.click();
+            fallback.remove();
+        }
+
+        function getStoragePathFromPublicUrl(publicUrl) {
+            if (!publicUrl) return null;
+            const marker = '/user-files/';
+            const index = publicUrl.indexOf(marker);
+            if (index === -1) return null;
+            return decodeURIComponent(publicUrl.substring(index + marker.length));
+        }
+
+        // 5. Sao chép nhanh
+        function saoChep(id, btnElement) {
+            const card = document.getElementById(`card-${id}`);
+            if (!card) return;
+            const text = card.querySelector('.item-card-body').innerText;
+
+            navigator.clipboard.writeText(text).then(() => {
+                showToast("Đã sao chép nội dung vào Clipboard!", "success");
+                
+                // Hiệu ứng đổi icon tạm thời
+                const originalHTML = btnElement.innerHTML;
+                btnElement.innerHTML = `<i data-lucide="check" size="16" style="color:var(--primary)"></i>`;
+                if (window.lucide) {
+                    lucide.createIcons();
+                }
+                setTimeout(() => {
+                    btnElement.innerHTML = originalHTML;
+                    if (window.lucide) {
+                        lucide.createIcons();
+                    }
+                }, 1500);
+            }).catch(err => {
+                showToast("Lỗi khi sao chép: " + err, "error");
+            });
+        }
+
+        // 6. Xóa dữ liệu
+        async function xoaDuLieu(id) {
+            if (!confirm("Bạn có chắc chắn muốn xóa bản ghi này khỏi đám mây?")) {
+                return;
+            }
+
+            const card = document.getElementById(`card-${id}`);
+            if (card) {
+                card.classList.add("removing");
+            }
+
+            try {
+                // Delete file from Storage if exists
+                const item = cachedItems.find(i => i.id === id);
+                if (item && item.file_url) {
+                    const parts = item.file_url.split('/user-files/');
+                    if (parts.length > 1) {
+                        const storagePath = decodeURIComponent(parts[1]);
+                        await supabaseClient.storage.from('user-files').remove([storagePath]);
+                    }
+                }
+
+                // Gọi API xóa từ Supabase Database
+                const { error } = await supabaseClient
+                    .from('kho_luu_tru')
+                    .delete()
+                    .eq('id', id);
+
+                if (error) {
+                    throw new Error(error.message);
+                }
+
+                showToast("Đã xóa bản ghi thành công!", "warning");
+                
+                // Đợi hoàn tất animation
+                setTimeout(async () => {
+                    await layDuLieu();
+                    if (currentUser.role === "admin") {
+                        await layToanBoDuLieu();
+                    }
+                }, 300);
+
+            } catch (err) {
+                showToast("Lỗi khi xóa: " + err.message, "error");
+                if (card) {
+                    card.classList.remove("removing");
+                }
+            }
+        }
+async function dangKy(){
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+
+    if (!email || !password) {
+        showToast("Vui lòng nhập Email và Mật khẩu!", "warning");
+        return;
+    }
+
+    const submitBtn = document.getElementById("btnAuthAction");
+    const originalBtnText = submitBtn.innerText;
+    submitBtn.disabled = true;
+    submitBtn.innerText = "Đang đăng ký...";
+
+    const { data, error } = await supabaseClient.auth.signUp({
+        email,
+        password
+    });
+
+    submitBtn.disabled = false;
+    submitBtn.innerText = originalBtnText;
+
+    if (error) {
+        showToast("Lỗi đăng ký: " + error.message, "error");
+    } else {
+        showToast("Đăng ký tài khoản thành công!Kiểm Tra Gmail để kích hoạt tài khoản", "success");
+        // Create user profile in app_users
+        try {
+            const username = email.split('@')[0];
+            await supabaseClient.from("app_users").insert([
+                {
+                    username: username,
+                    role: "user",
+                    auth_id: data.user ? data.user.id : null
+                }
+            ]);
+        } catch (dbErr) {
+            console.log("Error inserting user into DB table:", dbErr);
+        }
+    }
+}
+
+async function dangNhap(){
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+
+    if (!email || !password) {
+        showToast("Vui lòng nhập Email và Mật khẩu!", "warning");
+        return;
+    }
+
+    const submitBtn = document.getElementById("btnAuthAction");
+    const originalBtnText = submitBtn.innerText;
+    submitBtn.disabled = true;
+    submitBtn.innerText = "Đang đăng nhập...";
+
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+        email,
+        password
+    });
+
+    submitBtn.disabled = false;
+    submitBtn.innerText = originalBtnText;
+
+    if (error) {
+        showToast("Lỗi đăng nhập: " + error.message, "error");
+        return;
+    }
+
+    const username = email.split('@')[0];
+    await setupSession(username, data.user.id);
+}
+
+async function dangXuat(){
+    await supabaseClient.auth.signOut();
+    currentUser = null;
+    localStorage.removeItem("currentUser");
+    
+    // Clear UI
+    const welcome = document.getElementById("welcome");
+    if (welcome) welcome.innerHTML = "";
+    
+    document.getElementById("statTotalNotes").innerText = "0";
+    document.getElementById("statTotalFiles").innerText = "0";
+    document.getElementById("statUsedStorage").innerText = "0 Bytes";
+    document.getElementById("statRemainingStorage").innerText = "100 MB";
+    
+    document.getElementById("danhSachItems").innerHTML = `<div class="empty-state">Vui lòng đăng nhập để xem dữ liệu.</div>`;
+    
+    const adminDashboard = document.getElementById("adminDashboard");
+    const adminPanel = document.getElementById("adminPanel");
+    if (adminDashboard) adminDashboard.style.display = "none";
+    if (adminPanel) adminPanel.style.display = "none";
+
+    // Show login form
+    document.getElementById("authSection").style.display = "flex";
+    document.getElementById("dashboardSection").style.display = "none";
+    document.getElementById("btnLogoutHeader").style.display = "none";
+
+    showToast("Đã đăng xuất tài khoản!", "info");
+}
+    </script>
+</body>
+</html>
