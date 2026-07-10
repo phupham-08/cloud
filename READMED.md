@@ -1,0 +1,1 @@
+add vao srtage bang git add -p
