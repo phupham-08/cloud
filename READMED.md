@@ -1,1 +1,1 @@
-add vao srtage bang git add -p
+sua file khac o chung nhanh ma cghua pop stash ra
