@@ -7,7 +7,11 @@ int main(){
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 }//fix bug 444
+=======
+}//fix bug 444
+>>>>>>> Stashed changes
 =======
 }//fix bug 444
 >>>>>>> Stashed changes
